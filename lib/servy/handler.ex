@@ -1,4 +1,6 @@
 defmodule Servy.Handler do
+  require Logger
+
   def handle(request) do
     request
     |> parse
@@ -10,7 +12,7 @@ defmodule Servy.Handler do
     |> format_response
   end
 
-  def emojify(%{status: 200}= conv) do
+  def emojify(%{status: 200} = conv) do
     emojies = String.duplicate("🎉", 5)
     body = emojies <> "\n" <> conv.resp_body <> "\n" <> emojies
 
@@ -20,7 +22,7 @@ defmodule Servy.Handler do
   def emojify(conv), do: conv
 
   def track(%{status: 404, path: path} = conv) do
-    IO.puts "Warning: #{path} is on the loose!"
+    Logger.warn "Warning: #{path} is on the loose!"
     conv
   end
 
