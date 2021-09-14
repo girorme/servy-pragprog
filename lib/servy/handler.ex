@@ -12,101 +12,6 @@ defmodule Servy.Handler do
 
   alias Servy.Conv
 
-  def start_server() do
-    request = """
-      GET /wildthings HTTP/1.1
-      Host: example.com
-      User-Agent: ExampleBrowser/1.0
-      Accept: */*
-
-      """
-
-      response = Servy.Handler.handle(request)
-
-      IO.puts response
-
-      request = """
-      GET /bears HTTP/1.1
-      Host: example.com
-      User-Agent: ExampleBrowser/1.0
-      Accept: */*
-
-      """
-      response = Servy.Handler.handle(request)
-
-      IO.puts response
-
-      request = """
-      GET /bigfoot HTTP/1.1
-      Host: example.com
-      User-Agent: ExampleBrowser/1.0
-      Accept: */*
-
-      """
-      response = Servy.Handler.handle(request)
-
-      IO.puts response
-
-      request = """
-      GET /bears/1 HTTP/1.1
-      Host: example.com
-      User-Agent: ExampleBrowser/1.0
-      Accept: */*
-
-      """
-      response = Servy.Handler.handle(request)
-
-      IO.puts response
-
-      request = """
-      GET /bears?id=1 HTTP/1.1
-      Host: example.com
-      User-Agent: ExampleBrowser/1.0
-      Accept: */*
-
-      """
-      response = Servy.Handler.handle(request)
-
-      IO.puts response
-
-      request = """
-      GET /about HTTP/1.1
-      Host: example.com
-      User-Agent: ExampleBrowser/1.0
-      Accept: */*
-
-      """
-      response = Servy.Handler.handle(request)
-
-      IO.puts response
-
-      # request = """
-      # GET /bears/new HTTP/1.1
-      # Host: example.com
-      # User-Agent: ExampleBrowser/1.0
-      # Accept: */*
-
-      # """
-      # response = Servy.Handler.handle(request)
-
-      # IO.puts response
-
-      request = """
-      POST /bears HTTP/1.1
-      Host: example.com
-      User-Agent: ExampleBrowser/1.0
-      Accept: */*
-      Content-Type: application/x-www-form-urlencoded
-      Content-Length: 21
-
-      name=Baloo&type=Brown
-      """
-
-      response = Servy.Handler.handle(request)
-
-      IO.puts response
-  end
-
   @doc "Transforms the request into a response"
   def handle(request) do
     request
@@ -114,7 +19,6 @@ defmodule Servy.Handler do
     |> rewrite_path
     |> log
     |> route
-    |> emojify
     |> track
     |> format_response
   end
@@ -129,6 +33,10 @@ defmodule Servy.Handler do
   def emojify(%Conv{} = conv), do: conv
 
   def route(%Conv{method: "GET", path: "/wildthings"} = conv) do
+    %{ conv | status: 200, resp_body: "Bears, Lions, Tigers" }
+  end
+
+  def route(%Conv{method: "GET", path: "/wildlife"} = conv) do
     %{ conv | status: 200, resp_body: "Bears, Lions, Tigers" }
   end
 
@@ -167,7 +75,7 @@ defmodule Servy.Handler do
   end
 
   def route(%Conv{path: path} = conv) do
-    %{ conv | status: 404, resp_body: "No #{path} here"}
+    %{ conv | status: 404, resp_body: "No #{path} here!"}
   end
 
   def route(%Conv{method: "DELETE", path: "/bears/" <> _id} = conv) do
@@ -178,10 +86,10 @@ defmodule Servy.Handler do
     full_status = Conv.full_status(conv)
 
     """
-    HTTP/1.1 #{full_status}
-    Content-Type: text/html
-    Content-Length: #{byte_size(conv.resp_body)}
-
+    HTTP/1.1 #{full_status}\r
+    Content-Type: text/html\r
+    Content-Length: #{byte_size(conv.resp_body)}\r
+    \r
     #{conv.resp_body}
     """
   end
