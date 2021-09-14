@@ -5,5 +5,3 @@
     <li><%= bear.name %> - <%= bear.type %></li>
   <% end %>
 </ul>
-
-<%= inspect(bears) %>
