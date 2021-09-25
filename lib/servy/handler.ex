@@ -32,22 +32,17 @@ defmodule Servy.Handler do
 
   def emojify(%Conv{} = conv), do: conv
 
-  def route(%Conv{ method: "GET", path: "/snapshots" } = conv) do
-    parent = self() # request handling process
-    spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-1")}) end)
-    spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-2")}) end)
-    spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-3")}) end)
+  def route(%Conv{ method: "GET", path: "/sensors" } = conv) do
+    task = Task.async(fn -> Servy.Tracker.get_location("bigfoot") end)
 
-    snapshot1 = receive do {:result, filename} -> filename end
-    snapshot2 = receive do {:result, filename} -> filename end
-    snapshot3 = receive do {:result, filename} -> filename end
+    snapshots =
+      ["cam-1", "cam-2", "cam-3"]
+      |> Enum.map(&Task.async(fn -> VideoCam.get_snapshot(&1) end))
+      |> Enum.map(&Task.await/1)
 
-    #snapshot2 = VideoCam.get_snapshot("cam-2")
-    #snapshot3 = VideoCam.get_snapshot("cam-3")
+    where_is_big_foot = Task.await(task)
 
-    snapshots = [snapshot1, snapshot2, snapshot3]
-
-    %{ conv | status: 200, resp_body: inspect snapshots}
+    %{ conv | status: 200, resp_body: inspect {snapshots, where_is_big_foot}}
   end
 
   def route(%Conv{ method: "GET", path: "/kaboom/" }) do
