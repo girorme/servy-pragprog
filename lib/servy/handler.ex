@@ -1,6 +1,8 @@
 defmodule Servy.Handler do
 
   alias Servy.BearController
+  alias Servy.Conv
+  alias Servy.VideoCam
 
   @moduledoc "Handles HTTP requests."
 
@@ -9,8 +11,6 @@ defmodule Servy.Handler do
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
   import Servy.Parser, only: [parse: 1]
   import Servy.FileHandler, only: [handle_file: 2]
-
-  alias Servy.Conv
 
   @doc "Transforms the request into a response"
   def handle(request) do
@@ -32,7 +32,25 @@ defmodule Servy.Handler do
 
   def emojify(%Conv{} = conv), do: conv
 
-  def route(%Conv{ method: "GET", path: "/kaboom/" } = conv) do
+  def route(%Conv{ method: "GET", path: "/snapshots" } = conv) do
+    parent = self() # request handling process
+    spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-1")}) end)
+    spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-2")}) end)
+    spawn(fn -> send(parent, {:result, VideoCam.get_snapshot("cam-3")}) end)
+
+    snapshot1 = receive do {:result, filename} -> filename end
+    snapshot2 = receive do {:result, filename} -> filename end
+    snapshot3 = receive do {:result, filename} -> filename end
+
+    #snapshot2 = VideoCam.get_snapshot("cam-2")
+    #snapshot3 = VideoCam.get_snapshot("cam-3")
+
+    snapshots = [snapshot1, snapshot2, snapshot3]
+
+    %{ conv | status: 200, resp_body: inspect snapshots}
+  end
+
+  def route(%Conv{ method: "GET", path: "/kaboom/" }) do
     raise "Kaboom!"
   end
 
