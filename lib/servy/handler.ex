@@ -2,7 +2,6 @@ defmodule Servy.Handler do
 
   alias Servy.BearController
   alias Servy.Conv
-  alias Servy.VideoCam
 
   @moduledoc "Handles HTTP requests."
 
